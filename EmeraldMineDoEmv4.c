@@ -17,6 +17,7 @@
 //----------------------------------------------------------------------------
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <exec/types.h>
 #include <dos/dos.h>
 
@@ -41,6 +42,7 @@ static EngineEntry entries[10] =
     { "whistle.sh", 11094},
 };
 
+//----------------------------------------------------------------------------
 
 int main(void)
 {
@@ -52,3 +54,35 @@ int main(void)
 
         return RETURN_OK;
 }
+
+//----------------------------------------------------------------------------
+static UBYTE* memoryEmv4;
+
+static UBYTE* GetEmv4Memory(void)
+{
+        const size_t size = 100*1024;
+
+        memoryEmv4 = malloc(size);
+
+        if (NULL == memoryEmv4)
+        {
+                printf("Cannot allocate memory for emv4.\n");
+                return NULL;
+        }
+
+        UBYTE* memory = memoryEmv4;
+
+        for (int i = 0; i < size; ++i)
+        {
+                *memory++ = 0;
+        }
+
+        return memoryEmv4;
+}
+
+static void FreeEmv4Memory(void)
+{
+        free(memoryEmv4);
+}
+
+//----------------------------------------------------------------------------
