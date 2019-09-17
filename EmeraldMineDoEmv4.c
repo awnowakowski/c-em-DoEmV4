@@ -110,8 +110,6 @@ static long CopyFilesToEmv4Memory(UBYTE* memory)
         {
 		long size = CopyEntry(&entries[i], memory);
 
-                printf("dupa\n");
-
 		if (0 == size)
 		{
 			return 0;
