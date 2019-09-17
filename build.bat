@@ -1,0 +1,1 @@
+vc -c99 -IC:/vbcc/targets/m68k-amigaos/include/ -IC:/vbcc/include_h/ EmeraldMineDoEmv4.c -o EmeraldMineDoEmv4
