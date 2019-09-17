@@ -28,7 +28,9 @@ typedef struct
 
 } EngineEntry;
 
-static EngineEntry entries[10] = 
+#define ENTRIES_AMOUNT 10
+
+static const EngineEntry entries[ENTRIES_AMOUNT] = 
 {
     { "em", 30628},
     { "ems", 5872},
@@ -46,13 +48,147 @@ static EngineEntry entries[10] =
 
 int main(void)
 {
-        //1. allocate engine emv4 memory and clear it
+        UBYTE* memory = GetEmv4Memory();
 
-        //2. copy file content into emv4 memory
+        if (NULL == memory)
+        {
+                return RETURN_ERROR;
+        }
 
-        //3. write emv4 memory to file emv4
+        long size = CopyFilesToEmv4Memory(memory);
+
+        if (0 == size)
+        {
+                FreeEmv4Memory();
+                return RETURN_ERROR;
+        }
+
+        if (FALSE == WriteEmv4ToFile(memory, size))
+        {
+                FreeEmv4Memory();
+                return RETURN_ERROR;
+        }
+
+        FreeEmv4Memory();
 
         return RETURN_OK;
+}
+
+//----------------------------------------------------------------------------
+
+BOOL WriteEmv4ToFile(UBYTE* memory, long size)
+{
+	FILE* f = fopen("emv4", "wb");
+
+        if (NULL == f)
+        {
+                printf("Cannot open file 'emv4' to writting.\n");
+                return FALSE;
+        }
+
+        fwrite(memory, 1, size, f);
+        fclose(f);
+
+        return TRUE;
+}
+
+//----------------------------------------------------------------------------
+
+static long CopyFilesToEmv4Memory(UBYTE* memory)
+{
+        for (int i = 0; i < ENTRIES_AMOUNT; ++i)
+        {
+		long size = CopyEntry(entries[i], memory);
+
+		if (0 == size)
+		{
+			return 0;
+		}
+
+		if (size & 1)
+		{
+			size++;
+		}
+
+		memory += size;
+        }
+
+        return (memory - memoryEmv4);
+}
+
+//----------------------------------------------------------------------------
+
+int CopyEntry(const EngineEntry* entry, UBYTE* memory)
+{
+	FILE* f = GetFile(entry);
+
+	if (NULL == f)
+	{
+		return RETURN_ERROR;
+	}
+
+	long size = entry->size;
+
+	if (TRUE == ShouldSkipHeader(entry))
+	{
+		fseek(f, 16, SEEK_SET);
+		size -= 16;
+	}
+	
+	fread(memory, 1, size, f);
+	fclose(f);
+
+	return RETURN_OK;
+}
+
+//----------------------------------------------------------------------------
+
+BOOL ShouldSkipHeader(const EngineEntry* entry)
+{
+	if (0 == strcmp(entry->name, "em"))
+	{
+		return FALSE;
+	}
+
+	if (0 == strcmp(entry->name, "ems"))
+	{
+		return FALSE;
+	}
+
+	if (0 == strcmp(entry->name, "magic.sh"))
+	{
+		return FALSE;
+	}
+
+
+	return TRUE;
+}
+
+//----------------------------------------------------------------------------
+
+FILE* GetFile(const EngineEntry* entry)
+{
+	FILE* f = fopen(entry->name, "rb");
+
+	if (NULL == f)
+	{
+		printf("Cannot open file: %s\n", entry->name);
+		return NULL;
+	}
+
+	fseek(f, 0, SEEK_END);
+	long size = ftell(f);
+
+	if (entry->size != size)
+	{
+		printf("Wrong size of file. ");
+		printf("Expected %ld bytes but found %ld bytes\n", entry->size, size);
+		fclose(f);
+		return NULL;
+	}
+
+	fseek(f,0, SEEK_SET);
+	return f;
 }
 
 //----------------------------------------------------------------------------
