@@ -20,8 +20,35 @@
 #include <exec/types.h>
 #include <dos/dos.h>
 
+typedef struct 
+{
+    char* name;
+    long size;
+
+} EngineEntry;
+
+static EngineEntry entries[10] = 
+{
+    { "em", 30628},
+    { "ems", 5872},
+    { "bassdrum.sh", 5161},
+    { "claps.sh", 2679},
+    { "lead.sh", 7662},
+    { "magic.sh", 5432},
+    { "slapbass.sh", 7280},
+    { "snaredrum.sh", 4969},
+    { "voice.sh", 9375},
+    { "whistle.sh", 11094},
+};
+
 
 int main(void)
 {
+        //1. allocate engine emv4 memory and clear it
+
+        //2. copy file content into emv4 memory
+
+        //3. write emv4 memory to file emv4
+
         return RETURN_OK;
 }
