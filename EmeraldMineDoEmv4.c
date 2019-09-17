@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <exec/types.h>
 #include <dos/dos.h>
 
@@ -30,7 +31,7 @@ typedef struct
 
 #define ENTRIES_AMOUNT 10
 
-static const EngineEntry entries[ENTRIES_AMOUNT] = 
+static EngineEntry entries[ENTRIES_AMOUNT] = 
 {
     { "em", 30628},
     { "ems", 5872},
@@ -44,6 +45,15 @@ static const EngineEntry entries[ENTRIES_AMOUNT] =
     { "whistle.sh", 11094},
 };
 
+static UBYTE* memoryEmv4;
+
+static UBYTE* GetEmv4Memory(void);
+static long CopyFilesToEmv4Memory(UBYTE* memory);
+static void FreeEmv4Memory(void);
+static BOOL WriteEmv4ToFile(UBYTE* memory, long size);
+static long CopyEntry(const EngineEntry* entry, UBYTE* memory);
+static BOOL ShouldSkipHeader(const EngineEntry* entry);
+static FILE* GetFile(const EngineEntry* entry);
 //----------------------------------------------------------------------------
 
 int main(void)
@@ -76,7 +86,7 @@ int main(void)
 
 //----------------------------------------------------------------------------
 
-BOOL WriteEmv4ToFile(UBYTE* memory, long size)
+static BOOL WriteEmv4ToFile(UBYTE* memory, long size)
 {
 	FILE* f = fopen("emv4", "wb");
 
@@ -98,7 +108,9 @@ static long CopyFilesToEmv4Memory(UBYTE* memory)
 {
         for (int i = 0; i < ENTRIES_AMOUNT; ++i)
         {
-		long size = CopyEntry(entries[i], memory);
+		long size = CopyEntry(&entries[i], memory);
+
+                printf("dupa\n");
 
 		if (0 == size)
 		{
@@ -118,13 +130,13 @@ static long CopyFilesToEmv4Memory(UBYTE* memory)
 
 //----------------------------------------------------------------------------
 
-int CopyEntry(const EngineEntry* entry, UBYTE* memory)
+static long CopyEntry(const EngineEntry* entry, UBYTE* memory)
 {
 	FILE* f = GetFile(entry);
 
 	if (NULL == f)
 	{
-		return RETURN_ERROR;
+		return 0;
 	}
 
 	long size = entry->size;
@@ -138,12 +150,12 @@ int CopyEntry(const EngineEntry* entry, UBYTE* memory)
 	fread(memory, 1, size, f);
 	fclose(f);
 
-	return RETURN_OK;
+	return size;
 }
 
 //----------------------------------------------------------------------------
 
-BOOL ShouldSkipHeader(const EngineEntry* entry)
+static BOOL ShouldSkipHeader(const EngineEntry* entry)
 {
 	if (0 == strcmp(entry->name, "em"))
 	{
@@ -166,7 +178,7 @@ BOOL ShouldSkipHeader(const EngineEntry* entry)
 
 //----------------------------------------------------------------------------
 
-FILE* GetFile(const EngineEntry* entry)
+static FILE* GetFile(const EngineEntry* entry)
 {
 	FILE* f = fopen(entry->name, "rb");
 
@@ -192,7 +204,6 @@ FILE* GetFile(const EngineEntry* entry)
 }
 
 //----------------------------------------------------------------------------
-static UBYTE* memoryEmv4;
 
 static UBYTE* GetEmv4Memory(void)
 {
